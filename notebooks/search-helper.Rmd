@@ -1,0 +1,231 @@
+---
+title: "Skills4EOSC WP 6.1: Mapping Professional Networks Search"
+author: "Laurence Horton"
+date: "2022-12-16"
+---
+
+# Skills4EOSC WP 6.1: Mapping Professional Networks Search
+
+This is intended to help with the searching for Open Science related professional networks by automating the search teams in a browser based on search string criteria and a country internet domain.
+
+By default it is set to English language searches, using the DuckDuckGo search engine. Both can be changed with according to the user's wishes.
+
+This is not a web scraping tool. It is just for searching. The results will still need browsing, appraisal, and selection.
+
+It works for those with authorisation to access the Google sheet "Professional networks"
+
+Search strings were created by:
+* Mareike Buss (CBS/DeiC)
+* Emily Thorsson Schöller (CBS/DeiC)
+
+```{r library}
+library(RCurl)
+library(googlesheets4)
+library(tidyverse)
+library(here)
+```
+Load configurations not included in the Github repo
+
+```{r}
+google_sheet_url <- ""
+
+source(here("configurations.R"))
+
+# print configurations
+google_sheet_url
+```
+
+
+```{r read google sheet into R}
+# Will need to authenticate to allow Tidyverse to access your google account.
+# Need to manually select the "See, edit, create and delete all your Google Sheets spreadsheets. Learn more" option when authenticating.
+searches <-
+  read_sheet(
+    google_sheet_url,
+    sheet = "Search strings and searches",
+    skip = 2
+  )
+```
+
+```{r subset search strings}
+# If you need to search a different language, point to that specific column, i.e. "Search strings Denmark"
+search_strings <- searches %>%
+  select("Search strings Denmark") %>%
+  rename("Search strings" = 1)
+```
+
+```{r convert search strings to url text}
+# This converts the search strings into a string that can be added to the google search url.
+search_strings$`Search strings` <-
+  gsub(" \\[country\\]", " ", search_strings$`Search strings`)
+search_strings$`Search strings` <-
+  gsub(",", "+OR", search_strings$`Search strings`)
+search_strings$`Search strings` <-
+  trimws(
+    search_strings$`Search strings`,
+    which = c("both", "left", "right"),
+    whitespace = "[ \t\r\n]"
+  )
+search_strings$`Search strings` <-
+  gsub(" ", "+", search_strings$`Search strings`)
+```
+
+```{r split the search terms into character types}
+Artificial_intelligence <- as.character(search_strings[1, ])
+AI <- as.character(search_strings[2, ])
+Data_analytics <- as.character(search_strings[3, ])
+Data_curators <- as.character(search_strings[4, ])
+Data_sharing <- as.character(search_strings[5, ])
+Data_stewardship <- as.character(search_strings[6, ])
+Data_storage <- as.character(search_strings[7, ])
+FAIR_OR_FAIR_data <- as.character(search_strings[8, ])
+FAIR_data_management <- as.character(search_strings[9, ])
+High_performance <- as.character(search_strings[10, ])
+High_performance_computing <- as.character(search_strings[11, ])
+HPC <- as.character(search_strings[12, ])
+HPDA <- as.character(search_strings[13, ])
+Infrastructure_OR_e_infrastructure_OR_digital_infrastructure <-
+  as.character(search_strings[14, ])
+Knowledge_sharing_and_exchange <- as.character(search_strings[15, ])
+Open_access <- as.character(search_strings[16, ])
+Open_code_and_software <- as.character(search_strings[17, ])
+Open_science <- as.character(search_strings[18, ])
+Open_research <- as.character(search_strings[19, ])
+Replicability <- as.character(search_strings[20, ])
+Reproducibility <- as.character(search_strings[21, ])
+Reproducible_science <- as.character(search_strings[22, ])
+Research_data_management <- as.character(search_strings[23, ])
+Robust_and_rigorous_research <- as.character(search_strings[24, ])
+Scientific_integrity <- as.character(search_strings[25, ])
+Transparency <- as.character(search_strings[26, ])
+Trustworthiness <- as.character(search_strings[27, ])
+```
+
+```{r search URL prefix}
+search <- "https://duckduckgo.com/?q="
+```
+
+```{r}
+# ISO 3166-1 alpha-3 country code and ccTLDs country code top-level domains
+AUT <- ":.AT"
+BEL <- ":.BE"
+CHE <- ":.CH"
+CZE <- ":.CZ"
+DEU <- ":.DE"
+DNK <- ":.DK"
+ESP <- ":.ES"
+EST <- ":.EE"
+FIN <- ":.FI"
+FRA <- ":.FR"
+GBR <- ":.UK"
+GRC <- ":.GR"
+HUN <- ":.HU"
+IRE <- ":.IE"
+ISL <- ":.IS"
+ITA <- ":.IT"
+LTU <- ":.LT"
+NLD <- ":.NL"
+NOR <- ":.NO"
+POL <- ":.PL"
+PRT <- ":.PT"
+SVK <- ":.SK"
+SWE <- ":.SE"
+```
+
+```{r}
+# Remember to match country to column country selected
+country <- DNK
+```
+
+```{r function for search}
+geturlname <- function(name) {
+  h <- getCurlHandle()
+  z <- getURL(paste0(search, name, country),
+              followlocation = TRUE,
+              curl = h)
+  getCurlInfo(h)$effective.url # Stops a redirect to first link on the search
+}
+```
+
+## Search terms
+```{r artificial intelligence}
+browseURL(geturlname(Artificial_intelligence))
+```
+```{r AI}
+browseURL(geturlname(AI))
+```
+```{r data analytics}
+browseURL(geturlname(Data_analytics))
+```
+```{r data curators}
+browseURL(geturlname(Data_curators))
+```
+```{r data sharing}
+browseURL(geturlname(Data_sharing))
+```
+```{r data stewardship}
+browseURL(geturlname(Data_stewardship))
+```
+```{r data storage}
+browseURL(geturlname(Data_storage))
+```
+```{r fair or fair data}
+browseURL(geturlname(FAIR_OR_FAIR_data))
+```
+```{r fair data management}
+browseURL(geturlname(FAIR_data_management))
+```
+```{r high performance}
+browseURL(geturlname(High_performance))
+```
+```{r high performance computing}
+browseURL(geturlname(High_performance_computing))
+```
+```{r hpc}
+browseURL(geturlname(HPC))
+```
+```{r hpda}
+browseURL(geturlname(HPDA))
+```
+```{r infastructure}
+browseURL(geturlname(Infrastructure_OR_e_infrastructure_OR_digital_infrastructure))
+```
+```{r knowledge sharing and exchange}
+browseURL(geturlname(Knowledge_sharing_and_exchange))
+```
+```{r open access}
+browseURL(geturlname(Open_access))
+```
+```{r open code and software}
+browseURL(geturlname(Open_code_and_software))
+```
+```{r open science}
+browseURL(geturlname(Open_science))
+```
+```{r open research}
+browseURL(geturlname(Open_research))
+```
+```{r replicability}
+browseURL(geturlname(Replicability))
+```
+```{r reporoducability}
+browseURL(geturlname(Reproducibility))
+```
+```{r reproducable science}
+browseURL(geturlname(Reproducible_science))
+```
+```{r research data management}
+browseURL(geturlname(Research_data_management))
+```
+```{r robust and rigorus research}
+browseURL(geturlname(Robust_and_rigorous_research))
+```
+```{r scientific integrity}
+browseURL(geturlname(Scientific_integrity))
+```
+```{r transparency}
+browseURL(geturlname(Transparency))
+```
+```{r trustworthiness}
+browseURL(geturlname(Trustworthiness))
+```
