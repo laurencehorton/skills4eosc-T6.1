@@ -1,0 +1,172 @@
+---
+title: "Analysis of search results"
+author: "Per Møldrup-Dalum, AU"
+format: html
+editor: visual
+---
+
+# Loading libraries and setting up
+
+```{r}
+library(RCurl)
+library(googlesheets4)
+library(tidyverse)
+library(tidytext)
+library(here)
+```
+
+## get configurations
+
+```{r}
+google_sheet_url <- ""
+
+source(here("configurations.R"))
+
+# print configurations
+google_sheet_url
+```
+
+Load data
+
+```{r}
+# Will need to authenticate to allow Tidyverse to access your google account.
+# Need to manually select the "See, edit, create and delete all your Google Sheets spreadsheets. Learn more" option when authenticating.
+search_results <-
+  read_sheet(
+    google_sheet_url,
+    sheet = "Networks",
+    skip = 0,
+    col_types = "ccccccccccccccc"
+  )
+```
+
+```{r}
+glimpse(search_results)
+```
+
+# Counting terms in the Target groups and Competency columns
+
+Target group (self-identification)
+
+```{r}
+search_results |> 
+  select(`Target group (self-identification)`) |> 
+  unnest_tokens(
+    target_groups,
+    `Target group (self-identification)`, 
+    token="lines") |> 
+  count(target_groups) |> 
+  arrange(desc(n)) |> 
+  print(n=140)
+```
+
+Competences
+
+```{r}
+search_results |> 
+  select(`Competences`) |> 
+  unnest_tokens(competency,Competences, token="lines") |>  
+  count(competency) |> 
+  arrange(desc(n)) |> 
+  print(n=130)
+```
+
+## How many terms are used to describe competencies?
+
+```{r}
+search_results |> 
+  select(`Competences`) |> 
+  unnest_tokens(competency,Competences, token="lines") |>
+  filter(competency != "") |> 
+  count(competency) |>
+  arrange(desc(n)) |> 
+  googlesheets4::write_sheet(
+    ss = google_sheet_url,
+    sheet = "Competencies (auto generated)"
+  )
+```
+
+```{r}
+search_results |> 
+  select(`Competences`) |> 
+  unnest_tokens(competency,Competences, token="lines") |>
+  filter(competency != "") |> 
+  count(competency) |>
+  arrange(desc(n))
+```
+
+## How many terms are used to describe competencies?
+
+```{r}
+search_results |> 
+  select(`Target group (self-identification)`) |> 
+  unnest_tokens(lines,`Target group (self-identification)`, token="lines") |>
+  count(lines) |>
+  arrange(desc(n)) |> 
+  mutate(target_group = str_sub(lines,end=40)) |> 
+  select(-lines)
+```
+
+# Some visualisations
+
+```{r}
+without_country <- search_results |> filter(is.na(Country)) |> select(Country) |> length()
+
+library(ggthemes)
+search_results |> 
+  filter(!is.na(Country)) |> 
+  ggplot() +
+    geom_bar(aes(x=Country)) +
+    coord_flip() +
+    ylab(str_c("Number of found networks (found ", without_country," with no country)")) +
+    xlab("") +
+    scale_y_continuous(breaks=c(0,1,2,5,10,15)) +
+    theme_light()
+```
+
+```{r}
+search_results |> 
+  select(`Year of establishment`)
+```
+
+```{r}
+year_scale <- c(
+  "2020",
+  "2018",
+  "1971",
+  "2019",
+  "2021",
+  "2022",
+  "2009",
+  "NA",
+  "2013",
+  "2014",
+  "2017",
+  "2011",
+  "2016",
+  "2008",
+  "2012",
+  "2015",
+  "2005",
+  "earlier than 2019")
+
+no_year <- search_results |> 
+  filter(is.na(`Year of establishment`)) |> 
+  pull(`Year of establishment`) |> 
+  length()
+
+search_results |> 
+  filter(!is.na(`Year of establishment`)) |> 
+  mutate(`Year of establishment` = if_else(`Year of establishment` == "earlier than 2019","2019 (Before)",`Year of establishment`)) |> 
+  #count(Country) |> 
+  #filter(str_detect(`Year of establishment` ,"^\\d*$")) |>
+  #mutate(yl=length(`Year of establishment`)) |>
+  #select(`Year of establishment`)
+  #select(yl)
+  ggplot() +
+    geom_bar(aes(x=`Year of establishment`)) +
+    coord_flip() +
+    ylab(str_c("Number of found networks (found ",no_year," without year of establisment")) +
+    scale_y_continuous(breaks=c(0,1,2,5,10,15)) +
+    theme_light()
+```
