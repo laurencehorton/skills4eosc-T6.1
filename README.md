@@ -12,6 +12,10 @@ This repository includes automation scripts intended
 - to analyse and visualise the collected data.
 
 
+# Usage
+
+In order to use the scripts, you need to include a URL to the Google Sheet in the `configuration.R` file.
+
 # Funding
 
 SKILLS4EOSC HAS RECEIVED FUNDING FROM THE EUROPEAN UNION’S HORIZON EUROPE  RESEARCH AND INNOVATION PROGRAMME UNDER GRANT AGREEMENT NO. 101058527 AND FROM UK RESEARCH AND INNOVATION (UKRI) UNDER THE UK GOVERNMENT'S HORIZON EUROPE FUNDING GUARANTEE [GRANT NUMBER 10040140]
